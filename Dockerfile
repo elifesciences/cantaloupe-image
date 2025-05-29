@@ -75,8 +75,7 @@ RUN cd /opt \
     && unzip cantaloupe-$CANTALOUPE_VERSION.zip \
     && ln -s cantaloupe-$CANTALOUPE_VERSION cantaloupe \
     && rm cantaloupe-$CANTALOUPE_VERSION.zip \
-    && mkdir -p /var/log/cantaloupe /var/cache/cantaloupe \
-    && cp -rs /opt/cantaloupe/deps/Linux-x86-64/* /usr/
+    && mkdir -p /var/log/cantaloupe /var/cache/cantaloupe
 
 RUN chown -R cantaloupe /opt/cantaloupe-$CANTALOUPE_VERSION /var/log/cantaloupe /var/cache/cantaloupe
 
