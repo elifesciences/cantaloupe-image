@@ -38,14 +38,6 @@ RUN curl --silent --fail -OL https://github.com/cantaloupe-project/cantaloupe/ar
 RUN unzip v$CANTALOUPE_VERSION.zip
 RUN mv cantaloupe-$CANTALOUPE_VERSION cantaloupe-src
 
-
-# Install TurboJpegProcessor dependencies
-RUN mkdir -p /opt/libjpeg-turbo/lib
-RUN cp -r cantaloupe-src/docker/image_files/libjpeg-turbo/lib64 /opt/libjpeg-turbo/lib
-
-# Install KakaduNativeProcessor dependencies
-RUN cp cantaloupe-src/dist/deps/Linux-x86-64/lib/* /usr/lib/
-
 # Add our patches to the source
 COPY ./patches ./
 RUN cd cantaloupe-src/ && patch -p1 < /add-WebIdentityTokenFileCredentialsProvider-to-credentials-chain.patch
