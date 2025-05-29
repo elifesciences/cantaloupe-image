@@ -60,7 +60,7 @@ RUN cd cantaloupe-src/ && mvn clean package -DskipTests
 
 # Package
 FROM ubuntu:noble@sha256:6015f66923d7afbc53558d7ccffd325d43b4e249f41a6e93eef074c9505d2233 AS image
-LABEL org.opencontainers.image.source="https://github.com/elifesciences/enhanced-preprints-image-server"
+LABEL org.opencontainers.image.source="https://github.com/elifesciences/cantaloupe-image"
 
 ARG CANTALOUPE_VERSION
 ENV CANTALOUPE_VERSION=$CANTALOUPE_VERSION
