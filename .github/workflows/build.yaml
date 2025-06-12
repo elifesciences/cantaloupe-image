@@ -20,14 +20,8 @@ jobs:
         run: docker compose pull --quiet
       - name: Bring up image image-server
         run: docker compose up --wait
-      - name: Test image-server tif source -> jpg
-        run: curl -fI http://localhost:8182/iiif/2/515698v2_fig1.tif/full/full/0/default.jpg
-      - name: Test image-server gif source -> jpg
-        run: curl -fI http://localhost:8182/iiif/2/515698v2_ueqn1.gif/full/full/0/default.jpg
-      - name: Test image-server tif source -> png
-        run: curl -fI http://localhost:8182/iiif/2/515698v2_fig1.tif/full/full/0/default.png
-      - name: Test image-server gif source -> png
-        run: curl -fI http://localhost:8182/iiif/2/515698v2_ueqn1.gif/full/full/0/default.png
+      - name: Run tests
+        run: make test
       - id: cantaloupe-version
         name: Get cantaloupe version
         run: echo "cantaloupe-version=$(docker compose run -q --rm image-server bash -c 'echo $CANTALOUPE_VERSION')" >> $GITHUB_OUTPUT
