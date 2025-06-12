@@ -17,3 +17,5 @@ test:
 	# Test image-server gif source -> png
 	curl -fI http://localhost:8182/iiif/2/515698v2_ueqn1.gif/full/full/0/default.png
 
+cantaloupe-src:
+	git clone git@github.com:cantaloupe-project/cantaloupe.git cantaloupe-src
