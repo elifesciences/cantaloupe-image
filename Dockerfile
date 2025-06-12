@@ -5,6 +5,7 @@ FROM ubuntu:noble@sha256:b59d21599a2b151e23eea5f6602f4af4d7d31c4e236d22bf0b62b86
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG CANTALOUPE_VERSION
+ARG BUILD_RELEASE=true
 
 # Install various dependencies:
 # * ca-certificates is needed by wget
@@ -34,7 +35,7 @@ RUN apt-get install -y --no-install-recommends \
             patch
 
 # Grab source code and patch
-RUN curl --silent --fail -OL https://github.com/cantaloupe-project/cantaloupe/archive/refs/tags/v$CANTALOUPE_VERSION.zip
+RUN [[ "$BUILD_RELEASE" == "true" ]] && curl --silent --fail -OL https://github.com/cantaloupe-project/cantaloupe/archive/refs/tags/v$CANTALOUPE_VERSION.zip
 RUN unzip v$CANTALOUPE_VERSION.zip
 RUN mv cantaloupe-$CANTALOUPE_VERSION cantaloupe-src
 
