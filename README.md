@@ -21,7 +21,17 @@ Run `docker compose up --wait`
 
 Visit: http://localhost:8182/
 
-A sample image should be available at http://localhost:8182/iiif/2/515698v2_fig1.tif/full/full/0/default.jpg
+Sample images:
+
+- http://localhost:8182/iiif/2/515698v2_fig1.tif/full/full/0/default.jpg
+- http://localhost:8182/iiif/2/96357_elife-96357-fig2-figsupp1-v1.tif/full/full/0/default.jpg
+- http://localhost:8182/iiif/2/103047_elife-103047-fig1-figsupp2-v1.tif/full/full/0/default.jpg
+
+Sample images rescaled:
+
+- http://localhost:8182/iiif/2/515698v2_fig1.tif/full/200,/0/default.jpg
+- http://localhost:8182/iiif/2/96357_elife-96357-fig2-figsupp1-v1.tif/full/200,/0/default.jpg
+- http://localhost:8182/iiif/2/103047_elife-103047-fig1-figsupp2-v1.tif/full/200,/0/default.jpg
 
 ## Published Image Versions
 
