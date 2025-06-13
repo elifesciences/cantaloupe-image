@@ -1,10 +1,12 @@
+ARG BUILD_SOURCE=release
+# or, as and example of building locally:
+#ARG BUILD_SOURCE=local
 ARG CANTALOUPE_VERSION=5.0.7
 
 # Build
-FROM ubuntu:noble@sha256:b59d21599a2b151e23eea5f6602f4af4d7d31c4e236d22bf0b62b86d2e386b8f AS build
+FROM ubuntu:noble@sha256:b59d21599a2b151e23eea5f6602f4af4d7d31c4e236d22bf0b62b86d2e386b8f AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG CANTALOUPE_VERSION
 
 # Install various dependencies:
 # * ca-certificates is needed by wget
@@ -33,8 +35,10 @@ RUN apt-get install -y --no-install-recommends \
             unzip \
             patch
 
-# Grab source code and patch
-RUN curl --silent --fail -OL https://github.com/cantaloupe-project/cantaloupe/archive/refs/tags/v$CANTALOUPE_VERSION.zip
+FROM base AS release
+ARG CANTALOUPE_VERSION
+# Grab source code and patch if build release
+RUN curl --silent --fail -OL "https://github.com/cantaloupe-project/cantaloupe/archive/refs/tags/v$CANTALOUPE_VERSION.zip"
 RUN unzip v$CANTALOUPE_VERSION.zip
 RUN mv cantaloupe-$CANTALOUPE_VERSION cantaloupe-src
 
@@ -42,6 +46,12 @@ RUN mv cantaloupe-$CANTALOUPE_VERSION cantaloupe-src
 COPY ./patches ./
 RUN cd cantaloupe-src/ && patch -p1 < /add-WebIdentityTokenFileCredentialsProvider-to-credentials-chain.patch
 
+FROM base AS local
+# Grab source code from local checkout
+COPY ./cantaloupe-src cantaloupe-src
+
+
+FROM $BUILD_SOURCE AS build
 # Install application dependencies
 RUN cd cantaloupe-src/ && mvn --quiet dependency:resolve
 
@@ -53,9 +63,6 @@ RUN cd cantaloupe-src/ && mvn clean package -DskipTests
 # Package
 FROM ubuntu:noble@sha256:b59d21599a2b151e23eea5f6602f4af4d7d31c4e236d22bf0b62b86d2e386b8f AS image
 LABEL org.opencontainers.image.source="https://github.com/elifesciences/cantaloupe-image"
-
-ARG CANTALOUPE_VERSION
-ENV CANTALOUPE_VERSION=$CANTALOUPE_VERSION
 
 EXPOSE 8182
 
@@ -70,17 +77,20 @@ RUN adduser --system cantaloupe
 
 # Get and unpack Cantaloupe release archive
 
-COPY --from=build /cantaloupe-src/target/cantaloupe-$CANTALOUPE_VERSION.zip ./opt
-RUN cd /opt \
-    && unzip cantaloupe-$CANTALOUPE_VERSION.zip \
-    && ln -s cantaloupe-$CANTALOUPE_VERSION cantaloupe \
-    && rm cantaloupe-$CANTALOUPE_VERSION.zip \
-    && mkdir -p /var/log/cantaloupe /var/cache/cantaloupe
+COPY --from=build /cantaloupe-src/target/*.zip ./opt/
 
-RUN chown -R cantaloupe /opt/cantaloupe-$CANTALOUPE_VERSION /var/log/cantaloupe /var/cache/cantaloupe
+RUN cd /opt \
+    && unzip cantaloupe-*.zip \
+    && rm cantaloupe-*.zip \
+    && ln -s cantaloupe-* cantaloupe \
+    && mkdir -p /var/log/cantaloupe /var/cache/cantaloupe \
+    && cd /opt/cantaloupe \
+    && ln -s cantaloupe-*.jar cantaloupe.jar
+
+RUN chown -R cantaloupe /opt/cantaloupe-* /var/log/cantaloupe /var/cache/cantaloupe
 
 # Allow overridable config file path
 ENV CANTALOUPE_CONFIG_PATH=/opt/cantaloupe/cantaloupe.properties.sample
 
 USER cantaloupe
-CMD ["sh", "-c", "java -Dcantaloupe.config=\"$CANTALOUPE_CONFIG_PATH\" -Dsoftware.amazon.awssdk.http.service.impl=software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService -jar /opt/cantaloupe/cantaloupe-$CANTALOUPE_VERSION.jar"]
+CMD ["sh", "-c", "java -Dcantaloupe.config=\"$CANTALOUPE_CONFIG_PATH\" -Dsoftware.amazon.awssdk.http.service.impl=software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService -jar /opt/cantaloupe/cantaloupe.jar"]

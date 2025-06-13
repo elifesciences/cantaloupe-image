@@ -26,7 +26,7 @@ jobs:
         run: make test-expected-to-fail
       - id: cantaloupe-version
         name: Get cantaloupe version
-        run: echo "cantaloupe-version=$(docker compose run -q --rm image-server bash -c 'echo $CANTALOUPE_VERSION')" >> $GITHUB_OUTPUT
+        run: echo "cantaloupe-version=$(docker compose run -q --rm image-server bash -c 'ls -1 /opt/  | grep cantaloupe- | cut -d '-' -f 2-')" >> $GITHUB_OUTPUT
 
 
   generate-version:

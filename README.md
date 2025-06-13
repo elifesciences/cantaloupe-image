@@ -9,15 +9,15 @@ This project contains the files needed to build a docker image of the
 
 ## Building the docker image
 
-Run `docker compose build`
+Run `make build`
 
 ## Running the docker image
 
-Run `docker compose up --wait` and visit http://localhost:8182/
+Run `make prod` and visit http://localhost:8182/
 
 ## Docker compose for development
 
-Run `docker compose up --wait`
+Run `make dev`. This will build from a checkout of cantaloupe, that you can rebuild from and test.
 
 Visit: http://localhost:8182/
 
