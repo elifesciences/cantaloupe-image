@@ -1,4 +1,4 @@
-# Enhanced Preprints Image Server
+# Cantaloupe Image Server
 
 This project contains the files needed to build a docker image of the
 [Cantaloupe image server](https://cantaloupe-project.github.io/) with additional testing and patches
