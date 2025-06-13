@@ -4,13 +4,21 @@ comma := ,
 assert_OK = (if curl -fI $1; then echo "PASS"; else exit 1; fi)
 assert_FAIL = (if curl -fI $1; then exit 1; else echo "expected fail"; fi)
 
+.PHONY: prod
+prod: build
+	docker compose up --wait
+
 .PHONY: dev
-dev: build
+dev: build-local
 	docker compose up --wait
 
 .PHONY: build
 build:
 	docker compose build
+
+.PHONY: build-local
+build-local:
+	docker compose build --build-arg BUILD_SOURCE=local
 
 .PHONY: test
 test:
