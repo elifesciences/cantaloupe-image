@@ -22,6 +22,8 @@ jobs:
         run: docker compose up --wait
       - name: Run tests
         run: make test
+      - name: Run expected to fail tests
+        run: make test-expected-to-fail
       - id: cantaloupe-version
         name: Get cantaloupe version
         run: echo "cantaloupe-version=$(docker compose run -q --rm image-server bash -c 'echo $CANTALOUPE_VERSION')" >> $GITHUB_OUTPUT
