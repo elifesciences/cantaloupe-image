@@ -1,7 +1,7 @@
 ARG BUILD_SOURCE=release
 # or, as and example of building locally:
 #ARG BUILD_SOURCE=local
-ARG CANTALOUPE_VERSION=5.0.
+ARG CANTALOUPE_VERSION=5.0.7
 
 # Build
 FROM ubuntu:noble@sha256:b59d21599a2b151e23eea5f6602f4af4d7d31c4e236d22bf0b62b86d2e386b8f AS base
