@@ -1,5 +1,5 @@
 ARG BUILD_SOURCE=release
-ARG CANTALOUPE_VERSION="5.0.7"
+ARG CANTALOUPE_VERSION=5.0.7
 # or, as and example of building locally:
 #ARG BUILD_SOURCE=local
 
