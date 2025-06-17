@@ -44,7 +44,10 @@ RUN mv cantaloupe-$CANTALOUPE_VERSION cantaloupe-src
 
 # Add our patches to the source
 COPY ./patches ./
-RUN cd cantaloupe-src/ && patch -p1 < /add-WebIdentityTokenFileCredentialsProvider-to-credentials-chain.patch
+RUN cd cantaloupe-src/ && \
+    patch -p1 < /add-WebIdentityTokenFileCredentialsProvider-to-credentials-chain.patch && \
+    patch -p1 < /grayscale-resample.patch
+
 
 FROM base AS local
 # Grab source code from local checkout

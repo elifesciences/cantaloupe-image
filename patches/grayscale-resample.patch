@@ -1,0 +1,171 @@
+diff --git a/src/main/java/edu/illinois/library/cantaloupe/processor/Java2DUtil.java b/src/main/java/edu/illinois/library/cantaloupe/processor/Java2DUtil.java
+index 819f6ae71..3fca88110 100644
+--- a/src/main/java/edu/illinois/library/cantaloupe/processor/Java2DUtil.java
++++ b/src/main/java/edu/illinois/library/cantaloupe/processor/Java2DUtil.java
+@@ -209,6 +209,24 @@ public final class Java2DUtil {
+         return outImage;
+     }
+ 
++
++    /**
++     * @param inImage Image to convert.
++     * @return New image of type {@link BufferedImage#TYPE_INT_ARGB}, or the
++     *         input image if it is not Grayscale.
++     */
++    static BufferedImage convertGrayToARGB(BufferedImage inImage) {
++        BufferedImage outImage = inImage;
++        if (inImage.getType() == BufferedImage.TYPE_BYTE_GRAY) {
++            final Stopwatch watch = new Stopwatch();
++            outImage = new BufferedImage(inImage.getWidth(), inImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
++            ColorConvertOp convert = new ColorConvertOp(null);
++            convert.filter(inImage, outImage);
++            LOGGER.trace("convertGrayToARGB(): executed in {}", watch);
++        }
++        return outImage;
++    }
++
+     /**
+      * @param inImage Image to convert.
+      * @return        New image with a linear RGB color space, or the input
+@@ -1120,10 +1138,12 @@ public final class Java2DUtil {
+         switch (colorTransform) {
+             case GRAY:
+                 outImage = convertIndexedToARGB(outImage);
++                outImage = convertGrayToARGB(outImage);
+                 grayscale(outImage);
+                 break;
+             case BITONAL:
+                 outImage = convertIndexedToARGB(outImage);
++                outImage = convertGrayToARGB(outImage);
+                 binarize(outImage);
+                 break;
+         }
+@@ -1138,8 +1158,9 @@ public final class Java2DUtil {
+      * Grayscales the given image's pixels.
+      */
+     private static void grayscale(BufferedImage image) {
+-        for (int y = 0; y < image.getHeight(); y++) {
+-            for (int x = 0; x < image.getWidth(); x++) {
++        if (image.getType() != BufferedImage.TYPE_BYTE_GRAY) {
++            for (int y = 0; y < image.getHeight(); y++) {
++                for (int x = 0; x < image.getWidth(); x++) {
+                 int argb  = image.getRGB(x, y);
+                 int alpha = (argb >> 24) & 0xff;
+                 int red   = (argb >> 16) & 0xff;
+@@ -1148,6 +1169,7 @@ public final class Java2DUtil {
+                 int luma  = (int) (0.21 * red + 0.71 * green + 0.07 * blue);
+                 argb      = (alpha << 24) | (luma << 16) | (luma << 8) | luma;
+                 image.setRGB(x, y, argb);
++                }
+             }
+         }
+     }
+diff --git a/src/main/java/edu/illinois/library/cantaloupe/processor/resample/ResampleOp.java b/src/main/java/edu/illinois/library/cantaloupe/processor/resample/ResampleOp.java
+index b801b4e47..45316c851 100755
+--- a/src/main/java/edu/illinois/library/cantaloupe/processor/resample/ResampleOp.java
++++ b/src/main/java/edu/illinois/library/cantaloupe/processor/resample/ResampleOp.java
+@@ -226,6 +226,13 @@ public class ResampleOp extends AdvancedResizeOp {
+             srcImage = ImageUtils.convert(srcImage, srcImage.getColorModel().hasAlpha() ?
+                     BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR);
+         }
++
++       /*if (srcImage.getType() == BufferedImage.TYPE_CUSTOM &&  srcImage.getSampleModel().getNumBands() == 2) {
++            srcImage = ImageUtils.convert(srcImage, srcImage.getColorModel().hasAlpha() ?
++                    BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR);
++        }*/
++
++
+         this.numChannels = srcImage.getSampleModel().getNumBands();
+         assert numChannels > 0;
+         this.srcWidth = srcImage.getWidth();
+@@ -311,7 +318,7 @@ public class ResampleOp extends AdvancedResizeOp {
+ 
+     private void verticalFromWorkToDst(byte[][] workPixels, byte[] outPixels,
+                                        int start, int delta) {
+-        if (numChannels == 1) {
++        if (numChannels < 3) {
+             verticalFromWorkToDstGray(workPixels, outPixels, start,
+                     THREAD_COUNT);
+             return;
+@@ -354,7 +361,9 @@ public class ResampleOp extends AdvancedResizeOp {
+ 
+     private void verticalFromWorkToDstGray(byte[][] workPixels, byte[] outPixels,
+                                            int start, int delta) {
++        boolean useChannel1 = false;
+         for (int x = start; x < destWidth; x += delta) {
++            final int xLocation = x * numChannels;
+             for (int y = destHeight - 1; y >= 0; y--) {
+                 final int yTimesNumContributors =
+                         y * verticalSubsamplingData.numContributors;
+@@ -362,15 +371,22 @@ public class ResampleOp extends AdvancedResizeOp {
+                 final int sampleLocation = (y * destWidth + x);
+ 
+                 float sample0 = 0.0f;
++                float sample1 = 0.0f;
+                 int index = yTimesNumContributors;
+                 for (int j = max - 1; j >= 0; j--) {
+                     int valueLocation = verticalSubsamplingData.arrPixel[index];
+                     float arrWeight = verticalSubsamplingData.arrWeight[index];
+-                    sample0 += (workPixels[valueLocation][x] & 0xff) * arrWeight;
++                    sample0 += (workPixels[valueLocation][xLocation] & 0xff) * arrWeight;
++                    if (useChannel1) {
++                        sample1 += (workPixels[valueLocation][xLocation + 1] & 0xff) * arrWeight;
++                    }
+                     index++;
+                 }
+ 
+                 outPixels[sampleLocation] = toByte(sample0);
++                if (useChannel1) {
++                    outPixels[sampleLocation + 1] = toByte(sample1);
++                }
+             }
+         }
+     }
+@@ -381,7 +397,7 @@ public class ResampleOp extends AdvancedResizeOp {
+     private void horizontalFromSrcToWork(BufferedImage srcImg,
+                                          byte[][] workPixels,
+                                          int start, int delta) {
+-        if (numChannels == 1) {
++        if (numChannels < 3) {
+             horizontalFromSrcToWorkGray(srcImg, workPixels, start, delta);
+             return;
+         }
+@@ -437,25 +453,34 @@ public class ResampleOp extends AdvancedResizeOp {
+         // values
+         final int[] tempPixels = new int[srcWidth];
+         // Create reusable row to minimize memory overhead.
+-        final byte[] srcPixels = new byte[srcWidth];
++        final byte[] srcPixels = new byte[srcWidth * numChannels];
++        boolean useChannel1 = false;
+ 
+         for (int k = start; k < srcHeight; k = k + delta) {
+             ImageUtils.readPixelsBGR(srcImage, k, srcWidth, srcPixels, tempPixels);
+ 
+             for (int i = destWidth - 1; i >= 0; i--) {
++                int sampleLocation = i * numChannels;
+                 final int max = horizontalSubsamplingData.arrN[i];
++
+                 float sample0 = 0.0f;
++                float sample1 = 0.0f;
+                 int index = i * horizontalSubsamplingData.numContributors;
+-
+                 for (int j = max - 1; j >= 0; j--) {
+                     float arrWeight = horizontalSubsamplingData.arrWeight[index];
+-                    int pixelIndex = horizontalSubsamplingData.arrPixel[index];
++                    int pixelIndex = horizontalSubsamplingData.arrPixel[index] * numChannels;
+ 
+                     sample0 += (srcPixels[pixelIndex] & 0xff) * arrWeight;
++                    if (useChannel1) {
++                        sample1 += (srcPixels[pixelIndex + 1] & 0xff) * arrWeight;
++                    }
+                     index++;
+                 }
+ 
+-                workPixels[k][i] = toByte(sample0);
++                workPixels[k][sampleLocation] = toByte(sample0);
++                if (useChannel1) {
++                    workPixels[k][sampleLocation + 1] = toByte(sample1);
++                }
+             }
+         }
+     }
