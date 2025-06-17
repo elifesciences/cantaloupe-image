@@ -49,6 +49,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=minio
       - AWS_SECRET_ACCESS_KEY=miniotest
+      - LOG_APPLICATION_LEVEL=all
 
       # Override to use minio, not AWS S3
       - S3SOURCE_ENDPOINT=http://minio:9000/
