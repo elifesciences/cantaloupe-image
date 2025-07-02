@@ -4,7 +4,7 @@ ARG BUILD_SOURCE=release
 ARG CANTALOUPE_VERSION=5.0.7
 
 # Build
-FROM ubuntu:noble@sha256:89ef6e43e57cb94a23e4b28715a34444de91f45bd410fce3ce00819f86940a9c AS base
+FROM ubuntu:noble@sha256:440dcf6a5640b2ae5c77724e68787a906afb8ddee98bf86db94eea8528c2c076 AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -64,7 +64,7 @@ RUN cd cantaloupe-src/ && mvn clean package -DskipTests
 
 
 # Package
-FROM ubuntu:noble@sha256:89ef6e43e57cb94a23e4b28715a34444de91f45bd410fce3ce00819f86940a9c AS image
+FROM ubuntu:noble@sha256:440dcf6a5640b2ae5c77724e68787a906afb8ddee98bf86db94eea8528c2c076 AS image
 LABEL org.opencontainers.image.source="https://github.com/elifesciences/cantaloupe-image"
 
 EXPOSE 8182
