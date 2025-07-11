@@ -40,7 +40,7 @@
         }
 
         # rewrite URLs in response body
-        replace @infoJson "iiif/2/" ""
+        replace @infoJSON "iiif/2/" ""
         # Normalise the URI-encoded forward slashes in identifier for base image identifier requests
         # Handle identifiers with 2 slashes (e.g., /a/b/c/ or /a/b/c)
         # We have to exclude info.json because it looks like an imageidentifier path to these
