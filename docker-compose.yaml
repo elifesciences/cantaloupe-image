@@ -29,6 +29,7 @@ services:
       /usr/bin/mc config host add myminio http://minio:9000 minio miniotest;
       /usr/bin/mc mb myminio/data || true;
       /usr/bin/mc mirror /data myminio/data/data/;
+      /usr/bin/mc cp /data/515698v2_fig1.tif myminio/data/data/test-source:test-prefix/515698v2_fig1.tif;
       exit 0;
       "
     volumes:
@@ -61,6 +62,14 @@ services:
       timeout: 5s
       retries: 10
       start_period: 2s
+  caddy:
+    build:
+      dockerfile: Dockerfile.caddy
+      context: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/etc/caddy
 
 volumes:
   minio_storage:
