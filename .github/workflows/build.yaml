@@ -21,6 +21,9 @@ jobs:
         run: docker compose pull --quiet
       - name: Bring up image image-server
         run: docker compose up --wait
+      - name: debug logs
+        if: failure()
+        run: docker compose logs
       - name: Run tests
         run: make test
       - id: cantaloupe-version
