@@ -21,9 +21,6 @@ jobs:
         run: docker compose pull --quiet
       - name: Bring up image image-server
         run: docker compose up --wait
-      - name: debug logs
-        if: failure()
-        run: docker compose logs
       - name: Run tests
         run: make test
       - id: cantaloupe-version
@@ -32,7 +29,9 @@ jobs:
       - id: caddy-version
         name: Get caddy version
         run: echo "caddy-version=$(docker run caddy-test caddy version | cut -f1 -d ' ')" >> $GITHUB_OUTPUT
-
+      - name: debug logs
+        if: failure()
+        run: docker compose logs
 
   generate-version:
     runs-on: ubuntu-latest
