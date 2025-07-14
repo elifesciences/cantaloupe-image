@@ -1,10 +1,10 @@
 # Define a variable to hold a comma
 comma := ,
 
-assert_OK = (if curl -fI $1; then echo "PASS"; echo ""; else exit 1; fi)
-assert_FAIL = (if curl -fI $1; then exit 1; else echo "expected fail"; echo ""; fi)
-assert_CONTAINS = (if (curl -fsi $1 | grep $2); then echo "PASS"; echo ""; else exit 1; fi)
-assert_NOT_CONTAINS = (if (curl -fsi $1 | grep $2); then exit 1; else echo "PASS"; echo ""; fi)
+assert_OK = (if curl -fIL $1; then echo "PASS"; echo ""; else exit 1; fi)
+assert_FAIL = (if curl -fIL $1; then exit 1; else echo "expected fail"; echo ""; fi)
+assert_CONTAINS = (if (curl -fsiL $1 | grep $2); then echo "PASS"; echo ""; else exit 1; fi)
+assert_NOT_CONTAINS = (if (curl -fsiL $1 | grep $2); then exit 1; else echo "PASS"; echo ""; fi)
 
 .PHONY: prod
 prod: build
@@ -48,6 +48,12 @@ test:
 	$(call assert_CONTAINS,http://localhost:8080/test-source:test-prefix%2F515698v2_fig1.tif/info.json,context.json)
 	# Test caddy does not contain /iiif/2
 	$(call assert_NOT_CONTAINS,http://localhost:8080/test-source:test-prefix%2F515698v2_fig1.tif/info.json,iiif/2)
+
+	# Test caddy redirects correctly
+	$(call assert_OK,http://localhost:8080/test-source:test-prefix%2F515698v2_fig1.tif)
+
+	# Test caddy redirects correctly
+	$(call assert_OK,http://localhost:8080/test-source:test-prefix%252F515698v2_fig1.tif)
 
 cantaloupe-src:
 	git clone git@github.com:cantaloupe-project/cantaloupe.git cantaloupe-src
