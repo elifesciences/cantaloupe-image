@@ -42,7 +42,7 @@ jobs:
         id: trunkver
         uses: crftd-tech/trunkver@main
         with:
-          prerelease: ${{ github.ref == 'refs/heads/master' && 'false' || 'true' }}
+          prerelease: ${{ github.ref == 'refs/heads/main' && 'false' || 'true' }}
 
   build-and-push-cantaloupe:
     runs-on: ubuntu-latest
