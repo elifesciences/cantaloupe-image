@@ -1,37 +1,33 @@
 services:
-  ## Minio
-  minio:
-    image: minio/minio:RELEASE.2023-01-02T09-40-09Z
+  ## S3Mock (S3-compatible test double; minio's images are no longer publicly pullable)
+  s3mock:
+    image: adobe/s3mock:5.2.3@sha256:ab01a6946750f451ca215a47e91030695b260e4003b8a5a6201d25029b8fca92
     healthcheck:
-      test: curl http://minio:9000/minio/health/live
+      test: wget -q -O /dev/null http://s3mock:9090/favicon.ico
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 2s
     ports:
-      - "9100:9000"
-      - "9101:9001"
-    volumes:
-      - minio_storage:/data
+      - "9100:9090"
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: miniotest
-    command: server --console-address ":9001" /data
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: data
 
-  # Create bucket and upload data
+  # Upload data to the S3Mock bucket
   createbucket:
-    image: minio/mc:RELEASE.2022-12-24T15-21-38Z
+    image: amazon/aws-cli:2.37.1@sha256:b0dd5a4d216a1786863541a201baa7b7b4c5032bec9c6e72c38d01cafd7e8db8
     depends_on:
-      minio:
+      s3mock:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 minio miniotest;
-      /usr/bin/mc mb myminio/data || true;
-      /usr/bin/mc mirror /data myminio/data/data/;
-      /usr/bin/mc cp /data/515698v2_fig1.tif myminio/data/data/test-source:test-prefix/515698v2_fig1.tif;
-      exit 0;
+      aws --endpoint-url http://s3mock:9090 s3 cp --recursive /data s3://data/data/ &&
+      aws --endpoint-url http://s3mock:9090 s3 cp /data/515698v2_fig1.tif s3://data/data/test-source:test-prefix/515698v2_fig1.tif
       "
+    environment:
+      AWS_ACCESS_KEY_ID: s3mock
+      AWS_SECRET_ACCESS_KEY: s3mock
+      AWS_DEFAULT_REGION: us-east-1
     volumes:
       - ./data:/data
 
@@ -48,12 +44,13 @@ services:
       - S3SOURCE_BASICLOOKUPSTRATEGY_PATH_PREFIX=data/
       - S3SOURCE_BASICLOOKUPSTRATEGY_BUCKET_NAME=data
       - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=minio
-      - AWS_SECRET_ACCESS_KEY=miniotest
+      # s3mock ignores these, but Cantaloupe's AWS SDK won't send requests without some credentials
+      - AWS_ACCESS_KEY_ID=s3mock
+      - AWS_SECRET_ACCESS_KEY=s3mock
       - LOG_APPLICATION_LEVEL=all
 
-      # Override to use minio, not AWS S3
-      - S3SOURCE_ENDPOINT=http://minio:9000/
+      # Override to use s3mock, not AWS S3
+      - S3SOURCE_ENDPOINT=http://s3mock:9090/
     ports:
       - "8182:8182"
     healthcheck:
@@ -70,6 +67,3 @@ services:
       - "8080:8080"
     volumes:
       - ./config:/etc/caddy
-
-volumes:
-  minio_storage:
