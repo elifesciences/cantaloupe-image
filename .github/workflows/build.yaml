@@ -15,7 +15,7 @@ jobs:
       cantaloupe-version: ${{ steps.cantaloupe-version.outputs.cantaloupe-version }}
       caddy-version: ${{ steps.caddy-version.outputs.caddy-version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # This seems to work faster than pulling during docker compose up
       - name: Pull images
         run: docker compose pull --quiet
@@ -52,7 +52,7 @@ jobs:
         IMAGE_REPO: ghcr.io/elifesciences/cantaloupe
         IMAGE_TAG: ${{ needs.generate-version.outputs.trunkver }}-${{ needs.test.outputs.cantaloupe-version }} #append Cantaloupe version
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date --utc +%Y%m%d.%H%M)"
@@ -87,7 +87,7 @@ jobs:
         IMAGE_REPO: ghcr.io/elifesciences/cantaloupe-caddy
         IMAGE_TAG: ${{ needs.generate-version.outputs.trunkver }}-${{ needs.test.outputs.caddy-version }} #append caddy version
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date --utc +%Y%m%d.%H%M)"
